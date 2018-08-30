@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/andlabs/ui"
+  "github.com/andlabs/ui"
   "strconv"
   "math"
+  "os"
 )
 
 
 func startUi() {
 	err := ui.Main(func() {
-
 		inputM := ui.NewSpinbox(0, math.MaxInt32)
 		inputM.SetValue(1 << 15 - 1)
 		inputA := ui.NewSpinbox(0, math.MaxInt32)
@@ -41,6 +41,7 @@ func startUi() {
 		boxR.Append(inputR, true)
 
 		button := ui.NewButton("Отримати число")
+		buttonFile := ui.NewButton("Записати період у файл")
 		resultLabel := ui.NewLabel("")
 		box := ui.NewVerticalBox()
 		box.SetPadded(true)
@@ -51,10 +52,15 @@ func startUi() {
 		box.Append(boxX, false)
 		box.Append(boxR, false)
 		box.Append(button, false)
+		box.Append(buttonFile, false)
 		box.Append(resultLabel, false)
 		window := ui.NewWindow("Лабораторна робота №1", 200, 100, false)
 		window.SetMargined(true)
 		window.SetChild(box)
+		buttonFile.OnClicked(func(*ui.Button) {
+			i := toFile(inputM.Value(), inputA.Value(), inputC.Value(), inputX.Value())
+			resultLabel.SetText("Розмір періоду: " + strconv.Itoa(i))
+		})
 		button.OnClicked(func(*ui.Button) {
 			resultLabel.SetText(strconv.Itoa(int(getRandomNumber(inputM.Value(), inputA.Value(), inputC.Value(), inputX.Value(), inputR.Value()))))
 			inputR.SetValue(inputR.Value() + 1);
@@ -78,6 +84,22 @@ func getRandomNumber(m, a, c, x, r int) int {
 	return result
 }
 
+func toFile(m, a, c, x int) int {
+	file, err := os.Create("period.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	file.WriteString(strconv.Itoa(x))
+	result := (a * x + c) % m;
+	firstValue := result
+	i := 0
+	for ;result != firstValue || i == 0; i++ {
+		file.WriteString(", " + strconv.Itoa(result))
+		result = (a * result + c) % m;
+	}
+	return i
+}
 
 func main() {
 	startUi()
