@@ -1,8 +1,9 @@
 package main
 
 import (
-	"crypto/md5"
 	"fmt"
+	"os"
+	"io/ioutil"
 )
 func addExtension(input []byte) []byte {
 	input = append(input, 0x80)
@@ -13,7 +14,6 @@ func addExtension(input []byte) []byte {
 }
 
 func addLength(input []byte, length uint64) []byte {
-	// Length in bits (may need bigger type)
 	for i := uint(0); i < 8; i++ {
 		input = append(input, byte(length >> (8 * i)))
 	}
@@ -22,17 +22,21 @@ func addLength(input []byte, length uint64) []byte {
 
 
 func main() {
-	h := newMd5Hash()
-	data := []byte("abc2")
-	h.message = addLength(addExtension(data), uint64(len(data)) << 3)
+	if len(os.Args) == 1 {
+		println("Usage: md5 [file] input")
+	} else if len(os.Args) == 2 {
+		data := []byte(os.Args[1])
+		h := NewMd5Hash()
+		h.message = addLength(addExtension(data), uint64(len(data)) << 3)
+	} else if len(os.Args) > 2 && os.Args[1] == "file" {
+		data, err := ioutil.ReadFile(os.Args[2])
+		if err != nil {
+			panic(err)
+		}
+		h := NewMd5Hash()
+		h.message = addLength(addExtension(data), uint64(len(data)) << 3)
+		fmt.Printf("%x\n\n", h.Sum())
 
-
-	fmt.Printf("\n%x\n\n", md5.Sum(data))
-	
-	fmt.Printf("%x\n\n", h.runRounds())
-	/*fmt.Printf("%X\n",h.mdx[0])
-	fmt.Printf("%X\n",h.mdx[1])
-	fmt.Printf("%X\n",h.mdx[2])
-	fmt.Printf("%X\n\n",h.mdx[3])*/
+	}
 }
 

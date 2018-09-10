@@ -11,7 +11,7 @@ type Md5Hash struct {
 	mdx [4]uint32
 }
 
-func newMd5Hash() Md5Hash {
+func NewMd5Hash() Md5Hash {
 	h := Md5Hash{}
 	h.buf[0] = initA
 	h.buf[1] = initB
@@ -33,7 +33,7 @@ func (h *Md5Hash) Reset() {
 }
 
 
-func (h *Md5Hash) runRounds() [16]byte {
+func (h *Md5Hash) runRounds() {
 	// Iterate through every 64 byte (512 bit) chunk
 	for c := 0; c < len(h.message); c += 64 {
 		h.Reset()
@@ -59,9 +59,11 @@ func (h *Md5Hash) runRounds() [16]byte {
 		h.mdx[2] += h.buf[2]
 		h.mdx[3] += h.buf[3]
 	}
-	var digest [16]byte
+}
 
-	// convert endianess
+func (h *Md5Hash) Sum() [16]byte {
+	h.runRounds()
+	var digest [16]byte
 	for i, s := range h.mdx {
 		digest[i*4] = byte(s)
 		digest[i*4+1] = byte(s >> 8)
@@ -69,7 +71,6 @@ func (h *Md5Hash) runRounds() [16]byte {
 		digest[i*4+3] = byte(s >> 24)
 	}
 	return digest
-
 }
 
 func (h *Md5Hash) round(fun basicF, word uint32, i int) {
